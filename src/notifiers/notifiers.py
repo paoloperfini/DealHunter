@@ -108,3 +108,48 @@ def notify_telegram(token: str, chat_id: str, offer: Offer, decision: Decision):
         json={"chat_id": chat_id, "text": msg, "disable_web_page_preview": True},
         timeout=15
     )
+
+def get_telegram_updates(token: str, offset: int = 0, timeout: int = 5) -> tuple[list[dict], int]:
+    """
+    Fetch updates from Telegram Bot API.
+    Returns: (list of updates, highest update_id) or ([], offset) if no updates.
+    """
+    import requests
+    try:
+        url = f"https://api.telegram.org/bot{token}/getUpdates"
+        resp = requests.get(
+            url,
+            params={"offset": offset, "timeout": timeout},
+            timeout=timeout + 5
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if not data.get("ok"):
+            return [], offset
+        
+        updates = data.get("result", [])
+        if not updates:
+            return [], offset
+        
+        # Return updates and the next offset (highest update_id + 1)
+        max_update_id = max(u.get("update_id", 0) for u in updates)
+        return updates, max_update_id + 1
+    except Exception as e:
+        print(f"⚠️ Error fetching Telegram updates: {e}")
+        return [], offset
+
+def send_telegram_message(token: str, chat_id: str, text: str) -> bool:
+    """Send a message via Telegram Bot API. Returns True on success."""
+    import requests
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        resp = requests.post(
+            url,
+            json={"chat_id": chat_id, "text": text, "disable_web_page_preview": True},
+            timeout=15
+        )
+        resp.raise_for_status()
+        return resp.json().get("ok", False)
+    except Exception as e:
+        print(f"⚠️ Error sending Telegram message: {e}")
+        return False
