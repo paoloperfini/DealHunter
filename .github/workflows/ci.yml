@@ -8,6 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     env:
       PYTHONPATH: ${{ github.workspace }}
 
@@ -26,21 +27,5 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Debug paths
-        run: |
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          echo "PYTHONPATH=$PYTHONPATH"
-          python -c "import sys; print('sys.path='); print('\n'.join(sys.path))"
-          ls -la
-          ls -la src || true
-          python -c "import importlib; m=importlib.import_module('src'); print('import src OK:', m)"
-          
-                - name: List repo files
-        run: |
-          pwd
-          ls -la
-          find . -maxdepth 3 -type d -name "src" -print
-
       - name: Run tests
-        run: |
-          pytest -q
+        run: pytest -q
