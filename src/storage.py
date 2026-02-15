@@ -22,6 +22,14 @@ CREATE TABLE IF NOT EXISTS offers (
 );
 CREATE INDEX IF NOT EXISTS idx_offers_target_ts ON offers(target_name, ts_utc);
 CREATE INDEX IF NOT EXISTS idx_offers_url_ts ON offers(url, ts_utc);
+CREATE TABLE IF NOT EXISTS settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL UNIQUE,
+  value TEXT NOT NULL,
+  ts_utc TEXT NOT NULL,
+  actor TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key);
 """
 
 @dataclass
@@ -88,3 +96,24 @@ def best_new_reference(conn: sqlite3.Connection, *, target_name: str, window_day
     )
     (m,) = cur.fetchone()
     return float(m) if m is not None else None
+
+def get_setting(conn: sqlite3.Connection, key: str) -> Optional[str]:
+    """Get a setting value by key. Returns None if not found."""
+    cur = conn.execute("SELECT value FROM settings WHERE key=?", (key,))
+    row = cur.fetchone()
+    return row[0] if row else None
+
+def set_setting(conn: sqlite3.Connection, *, key: str, value: str, actor: str = "system") -> None:
+    """Set a setting value. Updates timestamp and actor."""
+    now = datetime.utcnow()
+    conn.execute(
+        """INSERT OR REPLACE INTO settings(key, value, ts_utc, actor)
+             VALUES(?, ?, ?, ?)""",
+        (key, value, now.isoformat(), actor)
+    )
+    conn.commit()
+
+def list_all_settings(conn: sqlite3.Connection) -> Dict[str, Tuple[str, str, str]]:
+    """List all settings. Returns {key: (value, ts_utc, actor)}"""
+    cur = conn.execute("SELECT key, value, ts_utc, actor FROM settings ORDER BY key")
+    return {row[0]: (row[1], row[2], row[3]) for row in cur.fetchall()}

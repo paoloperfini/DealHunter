@@ -6,6 +6,7 @@ from typing import Protocol
 # Forward ref via Protocol to avoid import cycle
 class OrchestratorLike(Protocol):
     def run_hardware_watch_once(self) -> None: ...
+    def run_telegram_commands_once(self) -> None: ...
 
 
 class Task(Protocol):
@@ -18,3 +19,11 @@ class HardwareWatchTask:
 
     def run_once(self, orch: OrchestratorLike) -> None:
         orch.run_hardware_watch_once()
+
+
+@dataclass(frozen=True)
+class TelegramCommandTask:
+    """Task: Poll and handle Telegram bot commands."""
+
+    def run_once(self, orch: OrchestratorLike) -> None:
+        orch.run_telegram_commands_once()
