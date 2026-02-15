@@ -1,0 +1,105 @@
+# Watchlist e soglie (Italia/EU)
+# Nota: per Subito.it NON facciamo scraping; usiamo import/email (vedi subito_*).
+settings:
+  history_db: "data/history.sqlite"
+  currency: EUR
+  include_shipping_if_present: true
+  loop_minutes: 180  # 3 ore
+  polite_delay_seconds: 1.5
+  user_agent: "PCPriceHunter/1.0 (+contact: you@example.com)"
+
+decision:
+  window_days: 30
+  drop_hours: 48
+  # Se min_48h <= avg_30d * (1 - rapid_drop_discount) => ALERT BUONO/AFFARE (a seconda soglie)
+  rapid_drop_discount: 0.08
+  # Se prezzo <= min_30d * (1 + affare_tolerance) => AFFARE
+  affare_tolerance: 0.02
+  # Se prezzo <= avg_30d * (1 - buono_discount) => BUONO
+  buono_discount: 0.07
+  # Se trend calo e siamo sopra min_30d di questo margine => ASPETTA
+  wait_above_min_margin: 0.10
+
+trust_used:
+  min_score_to_alert: 70
+  outlier_discount_vs_new: 0.45  # se usato è >45% sotto il nuovo: sospetto
+  requires_payment_protection: true
+  keywords_payment_good:
+    - "paypal"
+    - "beni e servizi"
+    - "assicurazione"
+    - "spedizione gestita da subito"
+  keywords_payment_bad:
+    - "ricarica"
+    - "postepay"
+    - "bonifico"
+    - "amico"
+    - "gift"
+
+targets:
+  cpu:
+    - name: "AMD Ryzen 7 9800X3D"
+      keywords: ["9800x3d", "ryzen 9800x3d"]
+      good_price_eur: 390
+      great_price_eur: 365
+  gpu:
+    - name: "NVIDIA GeForce RTX 5090"
+      keywords: ["rtx 5090", "geforce 5090"]
+      # Per GPU nuovo: soglie molto aggressive (hai zero fretta)
+      good_price_eur: 3499
+      great_price_eur: 3199
+  ram:
+    - name: "DDR5 64GB (2x32) AM5"
+      keywords: ["ddr5", "2x32", "64gb", "expo"]
+      good_price_eur: 220
+      great_price_eur: 180
+    - name: "DDR5 128GB (2x64) AM5"
+      keywords: ["ddr5", "2x64", "128gb", "expo"]
+      good_price_eur: 700
+      great_price_eur: 550
+  ssd:
+    - name: "Samsung 990 PRO 2TB"
+      keywords: ["990 pro", "2tb", "nvme", "m.2"]
+      good_price_eur: 260
+      great_price_eur: 220
+    - name: "WD Black SN850X 2TB"
+      keywords: ["sn850x", "2tb", "nvme", "m.2"]
+      good_price_eur: 230
+      great_price_eur: 200
+    - name: "PCIe 5.0 2TB (solo sconto vero)"
+      keywords: ["pcie 5.0", "gen5", "2tb", "nvme"]
+      good_price_eur: 280
+      great_price_eur: 240
+
+mobo:
+  - name: "ASUS AM5 ATX (ROG/TUF)"
+    keywords: ["asus", "am5", "atx", "rog", "strix", "tuf", "x870", "x670", "b650e"]
+
+sources:
+  trovaprezzi:
+    enabled: true
+    # Aggiungi pagine specifiche che vuoi monitorare (più stabile di cercare sempre)
+    urls:
+      - "https://www.trovaprezzi.it/prezzo_schede-grafiche_geforce_rtx_5090.aspx"
+      - "https://www.trovaprezzi.it/processori/prezzi-scheda-prodotto/amd_ryzen7_9800x3d"
+      - "https://www.trovaprezzi.it/prezzo_hard-disk_samsung_990_pro_2tb.aspx"
+  idealo:
+    enabled: true
+    urls:
+      - "https://www.idealo.it/confronta-prezzi/205072279/amd-ryzen-7-9800x3d.html"
+      - "https://www.idealo.it/confronta-prezzi/205622196/asus-geforce-rtx-5090.html"
+
+subito_ingest:
+  enabled: true
+  # 1) Import manuale: metti file jsonl/csv dentro data/subito_import/
+  import_folder: "data/subito_import"
+  # 2) Email IMAP: abilita e configura in config/imap.yaml
+  imap_enabled: false
+
+notifiers:
+  console: true
+  file_log: true
+  telegram:
+    enabled: true
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+    chat_id_env: "TELEGRAM_CHAT_ID"

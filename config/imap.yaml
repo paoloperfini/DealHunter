@@ -1,0 +1,12 @@
+# ESEMPIO (disabilitato di default)
+# Per Gmail: crea app password o OAuth (consigliato).
+imap:
+  host: "imap.gmail.com"
+  port: 993
+  user_env: "IMAP_USER"
+  password_env: "IMAP_PASSWORD"
+  folder: "INBOX"
+  # Filtra solo email Subito, es:
+  # search_query: 'FROM "noreply@subito.it"'
+  search_query: ""
+  mark_seen: false
