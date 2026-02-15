@@ -1,0 +1,27 @@
+id: DH-001
+title: Telegram price management
+intent: >
+  Add Telegram commands to list and modify reference prices,
+  stored in SQLite and applied without restart.
+
+scope:
+  - src/control
+  - src/storage
+  - src/engine/orchestrator
+
+commands:
+  - /prices
+  - /setprice <key> <value>
+
+constraints:
+  - No hard-coded product logic
+  - Settings stored in SQLite table "settings"
+  - Updates must include timestamp and actor (audit trail)
+  - Must not require application restart
+  - CI must remain green
+
+acceptance:
+  - /prices lists current reference values
+  - /setprice updates DB correctly
+  - Changes affect next execution cycle
+  - Changes are logged
