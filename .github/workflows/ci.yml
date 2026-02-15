@@ -34,6 +34,12 @@ jobs:
           ls -la
           ls -la src || true
           python -c "import importlib; m=importlib.import_module('src'); print('import src OK:', m)"
+          
+                - name: List repo files
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 3 -type d -name "src" -print
 
       - name: Run tests
         run: |
