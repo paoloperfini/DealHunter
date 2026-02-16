@@ -109,6 +109,7 @@ class TelegramCommandHandler:
 
         parts = message.split()
         command = parts[0]
+        command = command.split("@")[0].lower()
         args = parts[1:]
 
         if command == "/prices":

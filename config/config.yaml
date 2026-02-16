@@ -46,8 +46,8 @@ targets:
     - name: "NVIDIA GeForce RTX 5090"
       keywords: ["rtx 5090", "geforce 5090"]
       # Per GPU nuovo: soglie molto aggressive (hai zero fretta)
-      good_price_eur: 3499
-      great_price_eur: 3199
+      good_price_eur: 3000
+      great_price_eur: 2900
   ram:
     - name: "DDR5 64GB (2x32) AM5"
       keywords: ["ddr5", "2x32", "64gb", "expo"]
@@ -103,3 +103,7 @@ notifiers:
     enabled: true
     bot_token_env: "TELEGRAM_BOT_TOKEN"
     chat_id_env: "TELEGRAM_CHAT_ID"
+    poll_seconds: 3
+
+logging:
+  level: INFO  # DEBUG per troubleshooting

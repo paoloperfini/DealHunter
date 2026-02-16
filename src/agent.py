@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import logging
+import os
 from typing import Any, Dict, Optional
 
 import yaml
@@ -10,7 +12,7 @@ from .engine.orchestrator import Orchestrator
 
 def load_yaml(path: str) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        return yaml.safe_load(f) or {}
 
 
 def main() -> None:
@@ -21,6 +23,18 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = load_yaml(args.config)
+
+    # ---- logging ----
+    log_level = os.environ.get(
+        "DEALHUNTER_LOG_LEVEL",
+        str(cfg.get("logging", {}).get("level", "INFO")),
+    ).upper()
+
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
     imap_cfg: Optional[Dict[str, Any]] = None
 
     if cfg.get("subito_ingest", {}).get("imap_enabled"):
