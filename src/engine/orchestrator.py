@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 import time
+import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Optional
 
 from .tasks import Task, HardwareWatchTask, TelegramCommandTask
 from .pipeline_watch import run_once as hardware_watch_run_once
 from .pipeline_commands import run_once as commands_run_once
 
 
+logger = logging.getLogger(__name__)
+
+
 @dataclass
 class Orchestrator:
     """
     Orchestrator = 'mente' che coordina più task.
-
-    Opzione B: è un modulo separato (engine/) con API stabile:
-    - puoi aggiungere nuovi Task (es. premium_vehicle) senza toccare agent.py
-    - puoi in futuro parallelizzare task/worker senza cambiare interfaccia
     """
 
     cfg: Dict[str, Any]
@@ -26,21 +26,35 @@ class Orchestrator:
         task.run_once(self)
 
     def run_once(self) -> None:
-        # Per ora: un solo task legacy (hardware + Subito ingest).
-        # Domani: caricheremo tasks dinamici (Telegram) e li scheduliamo.
+        # Esecuzione singolo ciclo legacy
         self.run_task_once(HardwareWatchTask())
-        # Also run Telegram commands (non-blocking, handles updates)
         self.run_task_once(TelegramCommandTask())
 
     def run_forever(self, loop_minutes: int) -> None:
-        while True:
-            self.run_once()
-            time.sleep(loop_minutes * 60)
+        watch_period_s = loop_minutes * 60
+        cmd_period_s = int(self.cfg.get("notifiers", {}).get("telegram", {}).get("poll_seconds", 3))
 
-    # ---- Pipelines exposed to tasks (workers entrypoints) ----
+        next_watch = 0.0
+        next_cmd = 0.0
+
+        while True:
+            now = time.time()
+
+            if now >= next_watch:
+                self.run_task_once(HardwareWatchTask())
+                next_watch = now + watch_period_s
+
+            if now >= next_cmd:
+                self.run_task_once(TelegramCommandTask())
+                next_cmd = now + cmd_period_s
+
+            time.sleep(0.2)
+
+    # ---- Pipelines exposed to tasks ----
 
     def run_hardware_watch_once(self) -> None:
         hardware_watch_run_once(self.cfg, self.imap_cfg)
 
     def run_telegram_commands_once(self) -> None:
+        logger.debug("Telegram command loop tick")
         commands_run_once(self.cfg)
